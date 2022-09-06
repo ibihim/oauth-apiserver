@@ -11,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kauthenticator "k8s.io/apiserver/pkg/authentication/authenticator"
 	kuser "k8s.io/apiserver/pkg/authentication/user"
+	"k8s.io/klog/v2"
 
 	authorizationv1 "github.com/openshift/api/authorization/v1"
 	oauthclient "github.com/openshift/client-go/oauth/clientset/versioned/typed/oauth/v1"
@@ -75,10 +76,16 @@ func (a *tokenAuthenticator) AuthenticateToken(ctx context.Context, name string)
 	if err != nil {
 		return nil, false, err
 	}
+
+	klog.Infof("\n\ngroups: %+v\n\n", groups)
+
 	groupNames := make([]string, 0, len(groups))
 	for _, group := range groups {
 		groupNames = append(groupNames, group.Name)
+		klog.Infof("group: %+v\n", group)
 	}
+
+	klog.Infof("\ngroupnames: %s\n", groupNames)
 
 	tokenAudiences := a.implicitAuds
 	requestedAudiences, ok := kauthenticator.AudiencesFrom(ctx)
@@ -88,6 +95,7 @@ func (a *tokenAuthenticator) AuthenticateToken(ctx context.Context, name string)
 	}
 
 	auds := kauthenticator.Audiences(tokenAudiences).Intersect(requestedAudiences)
+	klog.Infof("\n\nauds: %+v\n\n", auds)
 	if len(auds) == 0 && len(a.implicitAuds) != 0 {
 		return nil, false, fmt.Errorf("token audiences %q is invalid for the target audiences %q", tokenAudiences, requestedAudiences)
 	}
