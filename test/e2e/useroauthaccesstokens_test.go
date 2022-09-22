@@ -572,23 +572,8 @@ func watchTokens(t *testing.T, adminConfig *rest.Config, testNS, frantaUID, mirk
 
 			tokensObserved := []*oauthv1.UserOAuthAccessToken{}
 
-			finished := make(chan bool)
 			timedCtx, timedCtxCancel := context.WithTimeout(context.Background(), 15*time.Second)
-			go func() {
-				tokenChan := tokenWatcher.ResultChan()
-				for {
-					select {
-					case tokenEvent := <-tokenChan:
-						token, ok := tokenEvent.Object.(*oauthv1.UserOAuthAccessToken)
-						require.True(t, ok)
-						require.Equal(t, tc.userName, token.UserName)
-						tokensObserved = append(tokensObserved, token)
-					case <-timedCtx.Done():
-						finished <- true
-						return
-					}
-				}
-			}()
+			defer timedCtxCancel()
 
 			go func() {
 				if tc.watchActions != nil {
@@ -600,10 +585,27 @@ func watchTokens(t *testing.T, adminConfig *rest.Config, testNS, frantaUID, mirk
 				}
 			}()
 
-			<-finished
-
-			require.Equal(t, tc.expectedResults, len(tokensObserved), "unexpected number of results, expected %d, got %d: %v", tc.expectedResults, len(tokensObserved), tokensObserved)
-			oauthTokenClient.OAuthAccessTokens()
+			tokenChan := tokenWatcher.ResultChan()
+			for {
+				select {
+				case tokenEvent := <-tokenChan:
+					token, ok := tokenEvent.Object.(*oauthv1.UserOAuthAccessToken)
+					if !ok {
+						t.Logf("Is not *oauthv1.UserOAuthAccessToken: %+v", token)
+						continue
+					}
+					require.Equal(t, tc.userName, token.UserName)
+					tokensObserved = append(tokensObserved, token)
+				case <-timedCtx.Done():
+					require.Equal(
+						t,
+						tc.expectedResults, len(tokensObserved),
+						"unexpected number of results, expected %d, got %d: %v", tc.expectedResults, len(tokensObserved), tokensObserved,
+					)
+					oauthTokenClient.OAuthAccessTokens()
+					return
+				}
+			}
 		})
 	}
 }
