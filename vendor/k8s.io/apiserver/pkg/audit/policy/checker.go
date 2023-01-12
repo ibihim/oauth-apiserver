@@ -22,6 +22,7 @@ import (
 	"k8s.io/apiserver/pkg/apis/audit"
 	auditinternal "k8s.io/apiserver/pkg/audit"
 	"k8s.io/apiserver/pkg/authorization/authorizer"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -64,6 +65,12 @@ type policyRuleEvaluator struct {
 func (p *policyRuleEvaluator) EvaluatePolicyRule(attrs authorizer.Attributes) auditinternal.RequestAuditConfigWithLevel {
 	for _, rule := range p.Rules {
 		if ruleMatches(&rule, attrs) {
+			klog.Infof(`
+================================================
+= EvalutePolicyRule:
+= ruleMatches(rule: %q, attrs: %q)
+================================================
+			`, rule, attrs)
 			return auditinternal.RequestAuditConfigWithLevel{
 				Level: rule.Level,
 				RequestAuditConfig: auditinternal.RequestAuditConfig{
@@ -73,6 +80,15 @@ func (p *policyRuleEvaluator) EvaluatePolicyRule(attrs authorizer.Attributes) au
 			}
 		}
 	}
+
+	klog.Infof(`
+================================================
+= EvalutePolicyRule:
+= no match, DefaultAuditLevel
+= attrs: %q
+= p.Rules: %q
+================================================
+			`, p.Rules, attrs)
 
 	return auditinternal.RequestAuditConfigWithLevel{
 		Level: DefaultAuditLevel,

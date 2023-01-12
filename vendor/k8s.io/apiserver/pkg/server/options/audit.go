@@ -352,6 +352,13 @@ func (o *AuditOptions) ApplyTo(
 }
 
 func (o *AuditOptions) newPolicyRuleEvaluator() (audit.PolicyRuleEvaluator, error) {
+	klog.Infof(`
+==================================================================================
+=
+= o.PolicyFile = %q
+=
+==================================================================================
+	`, o.PolicyFile)
 	if o.PolicyFile == "" {
 		return nil, nil
 	}
@@ -360,6 +367,15 @@ func (o *AuditOptions) newPolicyRuleEvaluator() (audit.PolicyRuleEvaluator, erro
 	if err != nil {
 		return nil, fmt.Errorf("loading audit policy file: %v", err)
 	}
+
+	klog.Infof(`
+==================================================================================
+=
+= policy = %q
+= 
+==================================================================================
+	`, p)
+
 	return policy.NewPolicyRuleEvaluator(p), nil
 }
 

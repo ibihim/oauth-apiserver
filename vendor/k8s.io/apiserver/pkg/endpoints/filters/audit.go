@@ -33,6 +33,7 @@ import (
 	"k8s.io/apiserver/pkg/endpoints/handlers/responsewriters"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/endpoints/responsewriter"
+	"k8s.io/klog/v2"
 )
 
 // WithAudit decorates a http.Handler with audit logging information for all the
@@ -41,6 +42,14 @@ import (
 // process events. If sink or audit policy is nil, no decoration takes place.
 func WithAudit(handler http.Handler, sink audit.Sink, policy audit.PolicyRuleEvaluator, longRunningCheck request.LongRunningRequestCheck) http.Handler {
 	if sink == nil || policy == nil {
+
+		klog.Info(`
+==================================================================================
+=
+= sink == nil || policy == nil
+= 
+==================================================================================
+	`)
 		return handler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -50,6 +59,14 @@ func WithAudit(handler http.Handler, sink audit.Sink, policy audit.PolicyRuleEva
 			responsewriters.InternalError(w, req, errors.New("failed to create audit event"))
 			return
 		}
+
+		klog.Info(`
+==================================================================================
+=
+= auditContext = %q
+= 
+==================================================================================
+	`, auditContext)
 
 		ev := auditContext.Event
 		if ev == nil || req.Context() == nil {
@@ -130,7 +147,28 @@ func evaluatePolicyAndCreateAuditEvent(req *http.Request, policy audit.PolicyRul
 		return nil, fmt.Errorf("failed to GetAuthorizerAttributes: %v", err)
 	}
 
+	klog.Infof(`
+==================================================================================
+=
+= attribs = %q
+=
+==================================================================================
+	`, attribs)
+
 	ls := policy.EvaluatePolicyRule(attribs)
+	klog.Infof(`
+==================================================================================
+=
+= ls : RequestAuditConfig {
+=   RequestAuditConfig {
+=     OmitStages: %q
+=     OmitManagedFields: %q
+=   }
+=   Level: %q
+= }
+=
+==================================================================================
+	`, ls.OmitStages, ls.OmitManagedFields, ls.Level)
 	audit.ObservePolicyLevel(ctx, ls.Level)
 	if ls.Level == auditinternal.LevelNone {
 		// Don't audit.
