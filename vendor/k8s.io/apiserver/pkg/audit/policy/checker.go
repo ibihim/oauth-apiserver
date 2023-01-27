@@ -62,27 +62,28 @@ type policyRuleEvaluator struct {
 	audit.Policy
 }
 
+// printRules prints the rules in the policy.
+func printRules(rules []audit.PolicyRule) string {
+	var str strings.Builder
+	str.WriteString("[")
+	for _, rule := range rules {
+		str.WriteString(rule.String())
+		str.WriteString(",")
+	}
+	str.WriteString("]")
+
+	return str.String()
+}
+
 func (p *policyRuleEvaluator) EvaluatePolicyRule(attrs authorizer.Attributes) auditinternal.RequestAuditConfigWithLevel {
 	for _, rule := range p.Rules {
 		if ruleMatches(&rule, attrs) {
 			klog.Infof(`
 ================================================
-ruleMatches
-------------------------------------------------
-{
-	"rules": {
-		%s
-	},
-	"matching rule": {
-		%s
-	},
-	"attributes": {
-		%s
-	}
-}
+ruleMatches: {"rules":%s,"matching rule":%s,"attributes":%s}
 ================================================
 `,
-				p.Rules,
+				printRules(p.Rules),
 				rule.String(),
 				authorizer.AttributesToString(attrs),
 			)
