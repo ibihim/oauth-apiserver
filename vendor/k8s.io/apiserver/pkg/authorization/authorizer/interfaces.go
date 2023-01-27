@@ -18,6 +18,7 @@ package authorizer
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"k8s.io/apiserver/pkg/authentication/user"
@@ -62,6 +63,27 @@ type Attributes interface {
 
 	// GetPath returns the path of the request
 	GetPath() string
+}
+
+// AttributesToString returns a string representation of the Attributes
+func AttributesToString(a Attributes) string {
+	return fmt.Sprintf(`{
+	"user": {
+		"name": "%s",
+		"uid": "%s",
+		"groups": %s,
+		"extra": "%q",
+	},
+	"verb": "%s",
+	"namespace": "%s",
+	"resource": "%s",
+	"subresource": "%s",
+	"name": "%s",
+	"apiGroup": "%s",
+	"apiVersion": "%s",
+	"resourceRequest": %t,
+	"path": "%s",
+}`, a.GetUser().GetName(), a.GetUser().GetUID(), a.GetUser().GetGroups(), a.GetUser().GetExtra(), a.GetVerb(), a.GetNamespace(), a.GetResource(), a.GetSubresource(), a.GetName(), a.GetAPIGroup(), a.GetAPIVersion(), a.IsResourceRequest(), a.GetPath())
 }
 
 // Authorizer makes an authorization decision based on information gained by making

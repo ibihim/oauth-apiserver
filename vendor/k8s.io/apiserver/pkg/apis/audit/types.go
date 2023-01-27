@@ -17,6 +17,8 @@ limitations under the License.
 package audit
 
 import (
+	"fmt"
+
 	authnv1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -258,6 +260,20 @@ type PolicyRule struct {
 	// Policy.OmitManagedFields will stand.
 	// +optional
 	OmitManagedFields *bool
+}
+
+func (p *PolicyRule) String() string {
+	return fmt.Sprintf(`{
+	"Level": "%s",
+	"Users": "%s",
+	"UserGroups": "%s",
+	"Verbs": "%s",
+	"Resources": "%s",
+	"Namespaces": "%s",
+	"NonResourceURLs": "%s",
+	"OmitStages": "%s",
+	"OmitManagedFields": "%v",
+}`, p.Level, p.Users, p.UserGroups, p.Verbs, p.Resources, p.Namespaces, p.NonResourceURLs, p.OmitStages, p.OmitManagedFields)
 }
 
 // GroupResources represents resource kinds in an API group.

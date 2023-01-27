@@ -67,10 +67,25 @@ func (p *policyRuleEvaluator) EvaluatePolicyRule(attrs authorizer.Attributes) au
 		if ruleMatches(&rule, attrs) {
 			klog.Infof(`
 ================================================
-= EvalutePolicyRule:
-= ruleMatches(rule: %q, attrs: %q)
+ruleMatches
+------------------------------------------------
+{
+	"rules": {
+		%s
+	},
+	"matching rule": {
+		%s
+	},
+	"attributes": {
+		%s
+	}
+}
 ================================================
-			`, rule, attrs)
+`,
+				p.Rules,
+				rule.String(),
+				authorizer.AttributesToString(attrs),
+			)
 			return auditinternal.RequestAuditConfigWithLevel{
 				Level: rule.Level,
 				RequestAuditConfig: auditinternal.RequestAuditConfig{
@@ -80,15 +95,6 @@ func (p *policyRuleEvaluator) EvaluatePolicyRule(attrs authorizer.Attributes) au
 			}
 		}
 	}
-
-	klog.Infof(`
-================================================
-= EvalutePolicyRule:
-= no match, DefaultAuditLevel
-= attrs: %q
-= p.Rules: %q
-================================================
-			`, p.Rules, attrs)
 
 	return auditinternal.RequestAuditConfigWithLevel{
 		Level: DefaultAuditLevel,
