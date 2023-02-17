@@ -263,17 +263,10 @@ type PolicyRule struct {
 }
 
 func (p *PolicyRule) String() string {
-	return fmt.Sprintf(`{
-	"Level": "%s",
-	"Users": "%s",
-	"UserGroups": "%s",
-	"Verbs": "%s",
-	"Resources": "%s",
-	"Namespaces": "%s",
-	"NonResourceURLs": "%s",
-	"OmitStages": "%s",
-	"OmitManagedFields": "%v",
-}`, p.Level, p.Users, p.UserGroups, p.Verbs, p.Resources, p.Namespaces, p.NonResourceURLs, p.OmitStages, p.OmitManagedFields)
+	return fmt.Sprintf(
+		`{"Level":"%s","Users":"%s","UserGroups":"%s","Verbs":"%s","Resources":"%s","Namespaces":"%s","NonResourceURLs":"%s","OmitStages":"%s","OmitManagedFields":"%v"}`,
+		p.Level, p.Users, p.UserGroups, p.Verbs, p.Resources, p.Namespaces, p.NonResourceURLs, p.OmitStages, p.OmitManagedFields,
+	)
 }
 
 // GroupResources represents resource kinds in an API group.

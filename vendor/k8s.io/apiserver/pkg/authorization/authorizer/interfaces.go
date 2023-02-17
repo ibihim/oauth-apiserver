@@ -18,6 +18,7 @@ package authorizer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -67,23 +68,17 @@ type Attributes interface {
 
 // AttributesToString returns a string representation of the Attributes
 func AttributesToString(a Attributes) string {
-	return fmt.Sprintf(`{
-	"user": {
-		"name": "%s",
-		"uid": "%s",
-		"groups": %s,
-		"extra": "%q",
-	},
-	"verb": "%s",
-	"namespace": "%s",
-	"resource": "%s",
-	"subresource": "%s",
-	"name": "%s",
-	"apiGroup": "%s",
-	"apiVersion": "%s",
-	"resourceRequest": %t,
-	"path": "%s",
-}`, a.GetUser().GetName(), a.GetUser().GetUID(), a.GetUser().GetGroups(), a.GetUser().GetExtra(), a.GetVerb(), a.GetNamespace(), a.GetResource(), a.GetSubresource(), a.GetName(), a.GetAPIGroup(), a.GetAPIVersion(), a.IsResourceRequest(), a.GetPath())
+	var extra string
+	b, err := json.Marshal(a.GetUser().GetExtra())
+	if err != nil {
+		extra = fmt.Sprintf("%v", a.GetUser().GetExtra())
+	} else {
+		extra = string(b)
+	}
+	return fmt.Sprintf(
+		`{"user":{"name":"%s","uid":"%s","groups":"%s","extra":"%v"},"verb":"%s","namespace":"%s","resource":"%s","subresource":"%s","name":"%s","apiGroup":"%s","apiVersion":"%s","resourceRequest":%t,"path":"%s"}`,
+		a.GetUser().GetName(), a.GetUser().GetUID(), a.GetUser().GetGroups(), extra, a.GetVerb(), a.GetNamespace(), a.GetResource(), a.GetSubresource(), a.GetName(), a.GetAPIGroup(), a.GetAPIVersion(), a.IsResourceRequest(), a.GetPath(),
+	)
 }
 
 // Authorizer makes an authorization decision based on information gained by making

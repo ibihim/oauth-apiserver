@@ -78,15 +78,21 @@ func printRules(rules []audit.PolicyRule) string {
 func (p *policyRuleEvaluator) EvaluatePolicyRule(attrs authorizer.Attributes) auditinternal.RequestAuditConfigWithLevel {
 	for _, rule := range p.Rules {
 		if ruleMatches(&rule, attrs) {
-			klog.Infof(`
+			if attrs.GetResource() == "tokenreviews" ||
+				attrs.GetResource() == "oauthauthorizetokens" ||
+				attrs.GetResource() == "oauthaccesstokens" {
+
+				klog.Infof(`
 ================================================
 ruleMatches: {"rules":%s,"matching rule":%s,"attributes":%s}
 ================================================
 `,
-				printRules(p.Rules),
-				rule.String(),
-				authorizer.AttributesToString(attrs),
-			)
+					printRules(p.Rules),
+					rule.String(),
+					authorizer.AttributesToString(attrs),
+				)
+			}
+
 			return auditinternal.RequestAuditConfigWithLevel{
 				Level: rule.Level,
 				RequestAuditConfig: auditinternal.RequestAuditConfig{
