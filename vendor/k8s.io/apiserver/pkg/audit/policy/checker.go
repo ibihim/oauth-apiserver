@@ -17,6 +17,8 @@ limitations under the License.
 package policy
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"k8s.io/apiserver/pkg/apis/audit"
@@ -34,6 +36,30 @@ func NewPolicyRuleEvaluator(policy *audit.Policy) auditinternal.PolicyRuleEvalua
 	for i, rule := range policy.Rules {
 		policy.Rules[i].OmitStages = unionStages(policy.OmitStages, rule.OmitStages)
 	}
+
+	b, err := json.Marshal(policy)
+	if err != nil {
+		fmt.Printf(`
+============================================================
+
+err:
+-----------------
+%s
+
+============================================================
+		`, err.Error())
+	}
+
+	fmt.Printf(`
+============================================================
+
+policy:
+-----------------
+%s
+
+============================================================
+	`, string(b))
+
 	return &policyRuleEvaluator{*policy}
 }
 
@@ -62,6 +88,31 @@ type policyRuleEvaluator struct {
 }
 
 func (p *policyRuleEvaluator) EvaluatePolicyRule(attrs authorizer.Attributes) auditinternal.RequestAuditConfigWithLevel {
+	fmt.Printf(`
+============================================================
+
+attrs:
+-----------------
+User: %s
+Verb: %s
+Namespace: %s
+Resource: %s
+Subresource: %s
+Name: %s
+APIGroup: %s
+APIVersion: %s
+
+============================================================
+	`,
+		attrs.GetUser().GetName(),
+		attrs.GetVerb(),
+		attrs.GetNamespace(),
+		attrs.GetResource(),
+		attrs.GetSubresource(),
+		attrs.GetName(),
+		attrs.GetAPIGroup(),
+		attrs.GetAPIVersion(),
+	)
 	for _, rule := range p.Rules {
 		if ruleMatches(&rule, attrs) {
 			return auditinternal.RequestAuditConfigWithLevel{
