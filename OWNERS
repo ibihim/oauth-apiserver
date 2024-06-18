@@ -5,10 +5,12 @@ reviewers:
   - stlaz
   - p0lyn0mial
   - slaskawi
+  - ibihim
 approvers:
   - deads2k
   - mfojtik
   - sttts
   - stlaz
   - s-urbaniak
+  - ibihim
 component: oauth-apiserver
